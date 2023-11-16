@@ -21,8 +21,8 @@ CountMinSketch::CountMinSketch(double gamma, double beta, double rho)
         }
     }else{
         sigma = sqrt(log(2.0 / beta) / rho);
-//        E = sqrt(2.0 * log(2.0 / beta) / rho) *
-//            sqrt(log(std::log(2.0 / beta) * 4.0 / gamma) / beta);
+        E1 = sqrt(2.0 * log(2.0 / beta) / rho) *
+            sqrt(log(std::log(2.0 / beta) * 4.0 / gamma) / beta);
         E=0;
         budget = rho;
         for (int i = 0; i < d; ++i) {
@@ -89,12 +89,14 @@ vector<double> CountMinSketch::get_parameter() {
     cout<<"E:"<<E<<endl;
     cout<<"sigma:"<<sigma<<endl;
     cout<<"rho:"<<budget<<endl;
+    cout<<"E1:"<<E1<<endl;
     vector<double> res;
     res.push_back(d);
     res.push_back(t);
     res.push_back(E);
     res.push_back(sigma);
     res.push_back(budget);
+    res.push_back(E1);
     return res;
 }
 

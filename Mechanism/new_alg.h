@@ -29,6 +29,7 @@ private:
     vector<vector<double>> C;
     void generateNoises(std::vector<double>& noises) const;
     vector<int> h(const std::string& x) const;
+    double E1;
 };
 
 class SmoothHistogram {
