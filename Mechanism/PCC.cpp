@@ -3,6 +3,7 @@
 //
 
 #include "PCC.h"
+#include <climits>
 
 
 PrivateMisraGries::PrivateMisraGries(double epsilon, double lambda, int T)

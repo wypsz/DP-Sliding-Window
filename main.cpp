@@ -141,8 +141,8 @@ double MAE_noise_true(vector<int> frequency, vector<double> frequency_noise){
 double MAE_cm_noise(vector<double> frequency_cm, vector<double> frequency_noise){
     int size = frequency_cm.size();
     if (size!=frequency_noise.size()){
-        cout<<"error!"<<endl;
     }
+        cout<<"error!"<<endl;
     double sum = 0.0;
     for (int i=0;i<size;i++){
         sum = sum + fabs(frequency_noise[i]-frequency_cm[i]);
@@ -254,7 +254,7 @@ std::vector<std::string> buildDataSet(const std::string& filename,int maxLines) 
     std::vector<std::string> dataVector(dataSet.begin(), dataSet.end());
     return dataVector;
 }
-int main() {
+int main(int argc, char* argv[]) {
 
 
 
@@ -286,11 +286,10 @@ int main() {
 //    vector<vector<int>> Low_freq = {{1,2},{1,2}};
 // * new_alg 和 RG一起测试
 
-//    SmoothHistogram shh(0.5,10000000,50000);
-//    100000000
+//    SmoothHistogram shh(0.24,100000,2000);
 //    shh.Add();
 //    cout<<shh.getCheckpoints().size()<<endl;
-
+//    return 0;
 
 // 统计所有元素的dic
 //    int maxLines = 1200000000;
@@ -299,24 +298,51 @@ int main() {
 
 
     // 测试两个完整窗口，开始准备参数
-    int w = 100000000;
-    int sub_num = 10;
-    int step = 50000;
-    double all_budget = 1;
-    double rho = 0.6999;
-    double gamma = 0.0001;
-    double beta = 0.005;
-    double alpha = 0.5;
-    double q = 0.3;
+//    int w = 1000000;
+//    int sub_num = 10;
+//    int step = 5000;
+//    double all_budget = 1;
+//    double rho = 0.6999;
+//    double gamma = 0.0001;
+//    double beta = 0.005;
+//    double alpha = 0.5;
+//    double q = 0.3;
+    cout<<"aaaaaaaaa"<<endl;
+//    if (argc < 16) { // 检查是否有足够的参数
+//        std::cerr << "Usage: " << argv[0] << " <w> <sub_num> <step> <all_budget> <rho> <gamma> <beta> <alpha> <q>" << std::endl;
+//        return 1;
+//    }
+
+    // 将字符串参数转换为整数和浮点数
+    int w = std::atoi(argv[1]);
+    int sub_num = std::atoi(argv[2]);
+    int step = std::atoi(argv[3]);
+    double all_budget = std::atof(argv[4]);
+    double rho = std::atof(argv[5]);
+    double gamma = std::atof(argv[6]);
+    double beta = std::atof(argv[7]);
+    double alpha = std::atof(argv[8]);
+    double q = std::atof(argv[9]);
+    int n = std::atoi(argv[10]);
+    int query_space = std::atoi(argv[11]);
+
+    string file_path1 = argv[12];
+    string file_path2 = argv[13];
+    string file_path3 = argv[14];
 
     // 先读一个窗口的数据
 //    vector<string> initialData = loadInitialData(filename, 100000000);
-    ofstream outFile2(("C://Users/12293/CLionProjects/DP_Sliding_window/res/1y/10000bit/6hash.txt"));
-//    if (!outFile2.is_open()) {
+    //ofstream outFile2("C://Users/12293/CLionProjects/DP_Sliding_window/res/network/1.txt");
+    //ofstream outFile3("C://Users/12293/CLionProjects/DP_Sliding_window/res/network/1_no.txt");
+
+    ofstream outFile(file_path1);
+    ofstream outFile2(file_path2);
+    ofstream outFile3(file_path3);
+    //    if (!outFile2.is_open()) {
 //        std::cerr << "Unable to open file";
 //        return 1;
 //    }
-    ifstream inFile("C://Users/12293/CLionProjects/DP_Sliding_window/dataset/worldCup.txt");
+    ifstream inFile("./dataset/sx-stackoverflow-c2q.txt");
     // 读取txt文件中的数据并对数据进行处理
     if (!inFile) {
         cerr << "failed" << endl;
@@ -324,7 +350,7 @@ int main() {
     }
     string l;
     vector<string> mini_data;
-    int n = 0;
+    int wh = 0;
     while (getline(inFile, l)) {
         // 对读取到的每行数据进行处理
         stringstream ls;
@@ -332,9 +358,9 @@ int main() {
         ls.str(l);
         ls>>t;
         mini_data.push_back(t);
-        n++;
+        wh++;
 
-        if (n == 1200000000){
+        if (wh == n){
             break;
         }
     }
@@ -346,7 +372,7 @@ int main() {
     dic.assign(d_all.begin(),d_all.end());
     cout<<"all dic size:"<<dic.size()<<endl;
 
-    std::ofstream outFile("C://Users/12293/CLionProjects/DP_Sliding_window/res/1y/10000bit/6hash.csv");
+    //std::ofstream outFile("C://Users/12293/CLionProjects/DP_Sliding_window/res/network/1.csv");
 
     if (!outFile.is_open()) {
         std::cerr << "Unable to open file";
@@ -362,8 +388,8 @@ int main() {
 //    vector<vector<int>> Low_freq = loadFromFile_num("C://Users/12293/CLionProjects/DP_Sliding_window/dataset/Low_freq.csv");
 //
 
-    vector<vector<string>> Query_set = loadFromFile("C://Users/12293/CLionProjects/DP_Sliding_window/dataset/worldCup_queries1y.txt");
-    vector<vector<int>> Query_freq = loadFromFile_num("C://Users/12293/CLionProjects/DP_Sliding_window/dataset/worldCup_frequencies1y.txt");
+//    vector<vector<string>> Query_set = loadFromFile("C://Users/12293/CLionProjects/DP_Sliding_window/dataset/worldCup_queries1y.txt");
+//    vector<vector<int>> Query_freq = loadFromFile_num("C://Users/12293/CLionProjects/DP_Sliding_window/dataset/worldCup_frequencies1y.txt");
 
 
     cout<<"hi"<<endl;
@@ -417,38 +443,6 @@ int main() {
     Retroactive_Grouping RG( vector<string> (mini_data.begin(),mini_data.begin()+w), indices,epsilon1, epsilon2,dic, w,10);
     */
 
-    vector<double> MAE_Noise_True;
-//    vector<double> MAE_Noise_True_M;
-//    vector<double> MAE_Noise_True_L;
-//    vector<double> MAE_Noise_True_sum;
-
-    vector<double> MAE_Cm_Noise;
-//    vector<double> MAE_Cm_Noise_M;
-//    vector<double> MAE_Cm_Noise_L;
-//    vector<double> MAE_Cm_Noise_sum;
-
-    vector<double> MAE_Cm_True;
-//    vector<double> MAE_Cm_True_M;
-//    vector<double> MAE_Cm_True_L;
-//    vector<double> MAE_Cm_True_sum;
-
-    vector<double> MRE_Noise_True;
-//    vector<double> MRE_Noise_True_M;
-//    vector<double> MRE_Noise_True_L;
-//    vector<double> MRE_Noise_True_sum;
-
-    vector<double> MRE_Cm_Noise;
-//    vector<double> MRE_Cm_Noise_M;
-//    vector<double> MRE_Cm_Noise_L;
-//    vector<double> MRE_Cm_Noise_sum;
-
-    vector<double> MRE_Cm_True;
-//    vector<double> MRE_Cm_True_M;
-//    vector<double> MRE_Cm_True_L;
-//    vector<double> MRE_Cm_True_sum;
-
-//    vector<double> MAE_Noise_True_RG;
-//    vector<double> MRE_Noise_True_RG;
 
     cout<<endl;
     cout<<"--------------------------------------------------------------------------------"<<endl;
@@ -458,99 +452,29 @@ int main() {
     //int query_space = 20000;
     //int query_space = 50;
     //int query_space = 50000;
-    int query_space = 2000000; // 子窗口大小为100w
+    //int query_space = 10000; // 子窗口大小为100w
+    outFile2<<"Query_space="<<query_space<<endl;
+    outFile3<<"Query_space="<<query_space<<endl;
     int ind = 0; // 标记在indices中的位置
-    int index = 0;
-    for (int i=w;i<1200000000;i=i+query_space) {
-        //now = i+query_space;
-        // 添加了10000个元素，查询一次
-//        vector<int> items;
-//        vector<int> frequency;
-//        vector<double> frequency_cm;
-//
-//        vector<double> frequency_noise;
-        // RG取消注释下面一行
-        //vector<double> noise_fre_rg;
-        cout << "Begin test:" << endl;
-        /*
-        for (int k=0;k<100;k++){
-            int random = (rand()%(dic.size()-0+1));
-             // cout<<random<<endl;
-            // 查找元素random的真实频率
-            //cout<<"find ture fre"<<now-w<<","<<now<<endl;
-            int fre = std::count(mini_data.begin()+now-w, mini_data.begin()+now, dic[random]);
-            //cout<<"Bad"<<endl;
-            if (fre != 0){
-                items.push_back(random);
-                frequency.push_back(fre);
-                //cout<<"true fre:"<<fre<<endl;
-                // 查找元素random不加噪的频率
-                double fre_cm = pc_no_noise.Query(dic[random]);
-                //cout<<"find cm fre"<<endl;
-                frequency_cm.push_back(fre_cm);
-                // 查找元素random加噪后的频率
-                double fre_noise = pc.Query(dic[random]);
-                frequency_noise.push_back(fre_noise);
-                //cout<<"find noise fre:"<<fre_noise<<endl;
-                // RG的下面两行取消注释
-                //double noise_f = RG.query(dic[random]);
-                //noise_fre_rg.push_back(noise_f);
-            }else{
-                k--;
-            }
-        }
-         */
-        // 选取const中的第i组高、中、低频元素进行查询
-        cout << "hi:" << index << endl;
-        vector<string> query_item = Query_set[index];
-        vector<int> item_index = find_index_dic(query_item, dic);
-        vector<string> query_i;
-        for (int x = 0; x < item_index.size(); x++) {
-            query_i.push_back(dic[item_index[x]]);
-        }
+    //int index = 0;
+    for (int i=w;i<n;i=i+query_space) {
 
         // 获取真实frequency
-        auto query_fre = Query_freq[index];
 
-        index++;
-
-        // 获取查询的freqency
-        vector<double> fre_noise;
-        vector<double> fre_cm;
-
-        for (int k = 0; k < query_i.size(); k++) {
-            // 查询sketch
-            double a = pc_no_noise.Query(query_i[k]);
-            fre_cm.push_back(a);
-            // 查询加噪后的结果
-            double b = pc.Query(query_i[k]);
-            fre_noise.push_back(b);
-        }
         cout << i << endl;
-
-        // 查询结果
-        double mae_noise_true = MAE_noise_true(query_fre, fre_noise);
-        double mae_cm_noise = MAE_cm_noise(fre_noise, fre_cm);
-        double mae_cm_true = MAE_noise_true(query_fre, fre_cm);
-        double mre_noise_true = MRE_noise_true(query_fre, fre_noise);
-        double mre_cm_noise = MRE_cm_noise(fre_cm, fre_noise);
-        double mre_cm_true = MRE_noise_true(query_fre, fre_cm);
-
-        // push结果
-        MAE_Noise_True.push_back(mae_noise_true);
-        MAE_Cm_Noise.push_back(mae_cm_noise);
-        MAE_Cm_True.push_back(mae_cm_true);
-        MRE_Noise_True.push_back(mre_noise_true);
-        MRE_Cm_Noise.push_back(mre_cm_noise);
-        MRE_Cm_True.push_back(mre_cm_true);
 
 
         // 存每个元素的frequency
         for (int g=0;g<dic.size();g++){
             double fr = pc.Query(dic[g]);
-            outFile2<<"("<<dic[g]<<","<<fr<<");";
+            //outFile2<<"("<<dic[g]<<","<<fr<<");";
+            outFile2<<fr<<",";
+            double frr = pc_no_noise.Query(dic[g]);
+            //outFile3<<"("<<dic[g]<<","<<frr<<");";
+            outFile3<<frr<<",";
         }
-        outFile2<<"\n";
+        outFile2<<endl;
+        outFile3<<endl;
         for (int j = 0; j < query_space; j++) {
             //string line = readSpecificLine(filename, i + j + 1);
             pc.ProcessNew(mini_data[i+j]);
@@ -559,67 +483,9 @@ int main() {
 
 
     }
-    cout<<"MAE between noise and true:"<<endl;
-    for(int i=0;i<MAE_Noise_True.size();i++){
-        cout<<MAE_Noise_True[i]<<",";
-    }
-    cout<<endl;
-    outFile<<"MAE between noise and true:"<<endl;
-    WriteVectorToCSV(outFile,MAE_Noise_True);
-
-    cout<<"---------------------------------------------------------------------------------"<<endl;
-    cout<<"MAE between noise and cm:"<<endl;
-    for(int i=0;i<MAE_Cm_Noise.size();i++){
-        cout<<MAE_Cm_Noise[i]<<",";
-    }
-    cout<<endl;
-
-    outFile<<"MAE between noise and cm:"<<endl;
-    WriteVectorToCSV(outFile,MAE_Cm_Noise);
-
-    cout<<"----------------------------------------------------------------"<<endl;
-    cout<<"MAE between cm and true:"<<endl;
-    for(int i=0;i<MAE_Cm_True.size();i++){
-        cout<<MAE_Cm_True[i]<<",";
-    }
-    cout<<endl;
-    outFile<<"MAE between cm and true:"<<endl;
-    WriteVectorToCSV(outFile,MAE_Cm_True);
-
-    cout<<"-------------------------------------------------------"<<endl;
-
-
-    cout<<"MRE between noise and true:"<<endl;
-    for(int i=0;i<MRE_Noise_True.size();i++){
-        cout<<MRE_Noise_True[i]<<",";
-    }
-    cout<<endl;
-    outFile<<"MRE between noise and true:"<<endl;
-    WriteVectorToCSV(outFile,MRE_Noise_True);
-
-    cout<<"----------------------------------------------------------"<<endl;
-
-
-    cout<<"MRE between noise and cm:"<<endl;
-    for(int i=0;i<MRE_Cm_Noise.size();i++){
-        cout<<MRE_Cm_Noise[i]<<",";
-    }
-    cout<<endl;
-    outFile<<"MRE between noise and cm:"<<endl;
-    WriteVectorToCSV(outFile,MRE_Cm_Noise);
-
-    cout<<"--------------------------------------------------------"<<endl;
-    cout<<"MRE between cm and true:"<<endl;
-    for(int i=0;i<MRE_Cm_True.size();i++){
-        cout<<MRE_Cm_True[i]<<",";
-    }
-    cout<<endl;
-    outFile<<"MRE between cm and true:"<<endl;
-    WriteVectorToCSV(outFile,MRE_Cm_True);
-
     outFile.close();
     outFile2.close();
-
+    outFile3.close();
 
 //    cout<<"query_list"<<endl;
 //    for (int i=0;i<query_list.size();i++){
