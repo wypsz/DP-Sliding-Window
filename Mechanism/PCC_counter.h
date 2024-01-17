@@ -67,7 +67,7 @@ private:
     int currentTime;
     void initBlocks(const std::vector<std::string>& initialData);
     std::default_random_engine generator;
-    unsigned int initialSeed; // 初始种子
+    unsigned int initialSeed;
     unsigned int currentSeed;
 };
 

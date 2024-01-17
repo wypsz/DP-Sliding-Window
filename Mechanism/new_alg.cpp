@@ -74,14 +74,6 @@ vector<int> CountMinSketch::h(const std::string& x) const {
 
 }
 
-//vector<int> CountMinSketch::query_vector(vector<std::string> dic) {
-//    vector<int> freq_s;
-//    for (int i=0;i<dic.size();i++){
-//        int freq = query(dic[i]);
-//        freq_s.push_back(freq);
-//    }
-//    return freq_s;
-//}
 
 vector<double> CountMinSketch::get_parameter() {
     cout<<d<<" hash function"<<endl;
@@ -104,12 +96,7 @@ vector<double> CountMinSketch::get_parameter() {
 
 SmoothHistogram::SmoothHistogram(double alpha, int w,int step)
         : alpha(alpha), s(0), indices(), checkpoints(), N(0), w(w),step(step) {}
-        // L1-norm是(alpha,alpha)-smooth函数
-        // alpha=zeta/2
-        // s = O(1/zeta log w log(1/beta)) checkpoint数量
-        // indices : 维护s个检查点的indices  X1<X2<...<XS=n X1=1
-        // checkpoints 维护相应的L1 norm  对于第一个元素，传入一个frequency vector，L1-norm相当于统计有多少个元素
-        // N=1 stream的长度
+
 
 void SmoothHistogram::addItem() {
     for (int i = 0; i < s; ++i) {
@@ -181,15 +168,6 @@ vector<int> SmoothHistogram::getIndices() {
 
 Private_counter::Private_counter(const vector<string>& xw, int w,int step, int sub_num,double rho, double gamma,
                                  double beta,double q, double alpha, double all_budget) {
-    /*
-     * xw:初始化时需要有一个窗口的数据灌入，构造第一个窗口相应的结构根号w个子窗口(批量更新，传入的是vector，统计好数字的)
-     * w:窗口大小（可开根号）
-     * rho:隐私预算
-     * gamma:count-min sketch 参数
-     * zeta:count-min sketch 参数
-     * beta:count-min sketch 参数
-     * dic:vector<string>结构，按顺序存放item，便于后续将一个item转为一个vector
-     */
 
     this->w = w;
     this->step = step;
@@ -200,11 +178,8 @@ Private_counter::Private_counter(const vector<string>& xw, int w,int step, int s
     this->alpha = alpha;
     this->all_budget = all_budget;
     this->sub_num = sub_num;
-    // 划分子窗口
-    this->sub_size = w/sub_num;//子窗口大小
-//    vector<double> checkpoints_noise;
-//    vector<double> checkpoints;
-    // 获得子窗口大小后直接调用sh获得checkpoint分割的list  s;
+    this->sub_size = w/sub_num;
+
     cout<<"hi"<<endl;
     SmoothHistogram sh(alpha,sub_size,step);
     cout<<"hi"<<endl;
@@ -232,20 +207,13 @@ Private_counter::Private_counter(const vector<string>& xw, int w,int step, int s
         }
         sub_windows.push_back(sub_win);
     }
-    // 处理每个子窗口
-//    for (int i=0;i<sub_num;i=i+sub_size){
-//        vector<CountMinSketch> cms = ProcessSubWindow((xw.begin()+i,xw.begin()+i+sub_size),gamma,beta,rho,q);
-//    }
+
     for (int i=0;i<sub_num;i++){
         vector<CountMinSketch> cms = ProcessSubWindow(sub_windows[i]);
         Window_CMs.push_back(cms);
         vector<string>().swap(sub_windows[i]);
         cout<<i<<"th sub_window finish!"<<endl;
-//        if (i==0){
-//            for (int j=0;j<cms.size();j++){
-//                cms[j].get_parameter();
-//            }
-//        }
+
     }
 }
 
@@ -261,11 +229,10 @@ vector<vector<double>> Private_counter::show_parameter() {
 }
 
 vector<CountMinSketch> Private_counter::ProcessSubWindow(const vector<std::string> &newItems) {
-    // 对于整个子窗口的元素进行处理
+
     vector<CountMinSketch> cms;
-    int index=0;//定位是第几个checkpoint
+    int index=0;
     for (int i=0;i<newItems.size();i++){
-        // 第一个元素，新建一个cm并插入一个元素
         if (i == 0){
             CountMinSketch cm (gamma,beta,rho);
             rest_budget = all_budget - rho;
@@ -273,15 +240,12 @@ vector<CountMinSketch> Private_counter::ProcessSubWindow(const vector<std::strin
             cms.push_back(cm);
             index++;
         }else{
-            // 更新已有的所有CM
             for (int j=0;j<index;j++){
                 cms[j].update(newItems[i]);
             }
             if (i+1 == indices[index]){
                 double budget;
-                // 这里是checkpoint，新开sketch
                 if (index == indices.size()-1){
-                    // 最后一个checkpoint，分配所有的预算给它
                     budget = rest_budget;
                 }else{
                     budget = rho*pow(q,index);
@@ -302,7 +266,6 @@ vector<CountMinSketch> Private_counter::ProcessSubWindow(const vector<std::strin
 
 
 void Private_counter::ProcessNew(std::string item) {
-    // 判断是不是第一个元素，如果是需要新建cm
     if (last_win == 0){
         CountMinSketch cm(gamma,beta,rho);
         rest_budget = all_budget - rho;
@@ -315,12 +278,9 @@ void Private_counter::ProcessNew(std::string item) {
         }
         vector<int>::iterator it = find(indices.begin(),indices.end(),last_win+1);
         if ( it != indices.end()){
-            //判断这个点是否需要是checkpoint，如果是也需要新建cm
-            // 找到这个点是第几个checkpoint，便于计算所分配的预算rhoi
             int ind = distance(indices.begin(),it);
             double budget;
             if (ind == indices.size()-1){
-                // 如果是最后一个checkpoint，分配给它所有的预算
                 budget = rest_budget;
             }else{
                 budget = rho * pow(q,ind);
@@ -334,7 +294,6 @@ void Private_counter::ProcessNew(std::string item) {
         last_win++;
     }
 
-    // 如若这个元素到达好正好一个窗口满了，设置一下操作。。。
     if (last_win == sub_size){
         // 1. 将这个子窗口的所有cm更新到全局中
         Window_CMs.push_back(last_win_cms);
@@ -343,13 +302,11 @@ void Private_counter::ProcessNew(std::string item) {
         last_win = 0;
         last_win_cms.clear();
         Window_CMs.erase(Window_CMs.begin());
-        // cout<<"last win"<<endl;
     }
 }
 
 
 double Private_counter::Query(string item) {
-    // 1. 找到当前的窗口需要使用那些checkpoints
     double sum=0.0;
     if (last_win == 0 || indices.size()==1){
         // 直接把第一个checkpoints都加起来
@@ -359,10 +316,9 @@ double Private_counter::Query(string item) {
         return sum;
     }
     int tmp = last_win+1;
-    // int tmp = 12;
-    //去第一个窗口中找最相近的点
+
     auto it = std::lower_bound(indices.begin(), indices.end(), tmp);
-    int pos = 0; //最接近的checkpoint的位置（第pos个checkpoint）
+    int pos = 0;
 
     if (*it == tmp) {
         //std::cout << "Found x in arr\n";
@@ -380,7 +336,7 @@ double Private_counter::Query(string item) {
         }
     }
 
-    // 2. 开始组装每个窗口的结果
+
     //double sum = 0.0;
     sum += Window_CMs[0][pos].query(item);
     for (int i=1;i<sub_num;i++){

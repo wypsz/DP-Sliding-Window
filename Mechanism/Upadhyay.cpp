@@ -74,9 +74,8 @@ Private_Heavy::Private_Heavy(const vector<string>& xw, int w, int sub_num,int st
 }
 
 vector<CountMinSketch> Private_Heavy::ProcessSubWindow(const vector<std::string> &newItems) {
-    // 对于整个子窗口的元素进行处理
     vector<CountMinSketch> cms;
-    int index=0;//定位是第几个checkpoint
+    int index=0;
     cout<<"len indices:"<<indices.size()<<endl;
     for (int i=0;i<newItems.size();i++){
         // 第一个元素，新建一个cm并插入一个元素
@@ -86,7 +85,6 @@ vector<CountMinSketch> Private_Heavy::ProcessSubWindow(const vector<std::string>
             cms.push_back(cm);
             index++;
         }else{
-            // 更新已有的所有CM
             for (int j=0;j<index;j++){
                 cms[j].update(newItems[i]);
             }
@@ -107,7 +105,6 @@ vector<CountMinSketch> Private_Heavy::ProcessSubWindow(const vector<std::string>
 }
 
 void Private_Heavy::ProcessNew(std::string item) {
-    // 判断是不是第一个元素，如果是需要新建cm
     if (last_win == 0){
         CountMinSketch cm(gamma/exp(1),zeta,0,0);
         cm.update(item);
@@ -119,8 +116,6 @@ void Private_Heavy::ProcessNew(std::string item) {
         }
         vector<int>::iterator it = find(indices.begin(),indices.end(),last_win+1);
         if ( it != indices.end()){
-            //判断这个点是否需要是checkpoint，如果是也需要新建cm
-            // 找到这个点是第几个checkpoint，便于计算所分配的预算rhoi
             int ind = distance(indices.begin(),it);
 
             CountMinSketch cm(gamma/exp(1),zeta,0,0);
@@ -130,12 +125,9 @@ void Private_Heavy::ProcessNew(std::string item) {
         last_win++;
     }
 
-    // 如若这个元素到达好正好一个窗口满了，设置一下操作。。。
     if (last_win == sub_size){
-        // 1. 将这个子窗口的所有cm更新到全局中
         Window_CMs.push_back(last_win_cms);
         cout<<"Window_CMs"<<Window_CMs.size()<<endl;
-        // 删除
         last_win = 0;
         last_win_cms.clear();
         Window_CMs.erase(Window_CMs.begin());
@@ -149,7 +141,7 @@ vector<double> Private_Heavy::generateLaplacianRandom(std::default_random_engine
     randomNumbers.reserve(numSamples);
 
     for (int i = 0; i < numSamples; ++i) {
-        double u = uniformDist(generator); // 使用传入的 generator
+        double u = uniformDist(generator);
         if (u < 0.5) {
             randomNumbers.push_back(scale * log(2.0 * u));
         } else {
@@ -291,11 +283,9 @@ pair<vector<double>, unordered_map<string,double>> Private_Heavy::Query_all() {
     vector<double> noise_vec = generateLaplacianRandom(generator,1.0*sub_size / epsilon, dic.size());
     currentSeed++;
     for (int k=0;k<dic.size();k++){
-        // 获取每个元素的频率
         double sum = 0.0;
         if (flag ==0){
 
-            // 1. 找到当前的窗口需要使用那些checkpoints
             //double sum = 0.0;
             if (last_win == 0 || indices.size() == 1) {
                 // 直接把第一个checkpoints都加起来
@@ -313,21 +303,17 @@ pair<vector<double>, unordered_map<string,double>> Private_Heavy::Query_all() {
                 int pos = 0;
 
                 if (it == indices.begin()) {
-                    // tmp 小于所有元素，没有上一个位置
-                    // 根据具体需求处理这种情况
-                    pos = -1; // 或者任何表示 "没有有效位置" 的值
+
+                    pos = -1;
                 } else {
                     if (it == indices.end() || *it != tmp) {
-                        // 如果 tmp 大于所有元素，或者没有在数组中找到完全匹配的元素
-                        // it 指向的是第一个大于 tmp 的元素或者是 end()
-                        --it; // 移动到上一个元素
+                        --it;
                     }
                     pos = std::distance(indices.begin(), it);
                 }
 
                 L1 = checkpoints[pos] + last_win + sub_size * (sub_num - 2);
 
-                // 2. 开始组装每个窗口的结果
                 //double sum = 0.0;
                 sum += Window_CMs[0][pos].query(dic[k]);
                 for (int i = 1; i < sub_num; i++) {
@@ -337,49 +323,29 @@ pair<vector<double>, unordered_map<string,double>> Private_Heavy::Query_all() {
 
             }
         }else{
-            // 需要查找真实的窗口的大小，
             int tmp1 =(w-last_win);
             int n = 0 ;
             while (tmp1>sub_size){
                 tmp1 -= sub_size;
                 n++;
             }
-            // int tmp = sub_size - tmp1;
-            // auto it = std::lower_bound(indices.begin(), indices.end(), tmp);
-            // int pos = 0; //最接近的checkpoint的位置（第pos个checkpoint）
 
-            // if (*it == tmp) {
-            //     //std::cout << "Found x in arr\n";
-            //     pos = distance(indices.end(), it);
-            // } else {
-            //     int idx = it - indices.begin();
-            //     if (idx != 0){
-            //         pos = idx-1;
-            //     }else{
-            //         pos = idx;
-            //     }
-            // }
             int tmp = last_win +1;
             auto it = std::lower_bound(indices.begin(), indices.end(), tmp);
             int pos = 0;
 
             if (it == indices.begin()) {
-                // tmp 小于所有元素，没有上一个位置
-                // 根据具体需求处理这种情况
-                pos = -1; // 或者任何表示 "没有有效位置" 的值
+                pos = -1;
             } else {
                 if (it == indices.end() || *it != tmp) {
-                    // 如果 tmp 大于所有元素，或者没有在数组中找到完全匹配的元素
-                    // it 指向的是第一个大于 tmp 的元素或者是 end()
-                    --it; // 移动到上一个元素
+
+                    --it;
                 }
                 pos = std::distance(indices.begin(), it);
             }
             L1 = checkpoints[pos] + last_win + sub_size * n;
 
-            // 2. 开始组装每个窗口的结果
-            //double sum = 0.0;
-            //cout<<"windows_CMs size:"<<Window_CMs.size()<<endl;
+
             sum += Window_CMs[0][pos].query(dic[k]);
             for (int i = 1; i < sub_num; i++) {
                 sum += Window_CMs[i][0].query(dic[k]);
@@ -410,7 +376,6 @@ pair<vector<double>, unordered_map<string,double>> Private_Heavy::Query_all() {
     unordered_map<string,double>::iterator iter;
     int ix = 0;
     for(iter = item_fre_noise.begin();iter!=item_fre_noise.end();iter++){
-        //item_fre_noise.insert(pair<string,double>(iter->first,iter->second+noise[ix]));
         iter->second += noise[ix];
         ix ++;
     }
@@ -425,14 +390,11 @@ vector<double> Private_Heavy::Query() {
     vector<double> noise_vec = generateLaplacianRandom(generator,2.0*sub_size / epsilon, dic.size());
     currentSeed++;
     for (int k=0;k<dic.size();k++){
-        // 获取每个元素的频率
         double sum = 0.0;
         if (flag ==0){
 
-            // 1. 找到当前的窗口需要使用那些checkpoints
             //double sum = 0.0;
             if (last_win == 0 || indices.size() == 1) {
-                // 直接把第一个checkpoints都加起来
                 for (int i = 0; i < sub_num; i++) {
                     double r1 = Window_CMs[i][0].query(dic[k]);
                     sum += r1;
@@ -445,22 +407,17 @@ vector<double> Private_Heavy::Query() {
                 auto it = std::lower_bound(indices.begin(), indices.end(), tmp);
                 int pos = 0;
                 if (it == indices.begin()) {
-                    // tmp 小于所有元素，没有上一个位置
-                    // 根据具体需求处理这种情况
-                    pos = -1; // 或者任何表示 "没有有效位置" 的值
+
+                    pos = -1;
                 } else {
                     if (it == indices.end() || *it != tmp) {
-                        // 如果 tmp 大于所有元素，或者没有在数组中找到完全匹配的元素
-                        // it 指向的是第一个大于 tmp 的元素或者是 end()
-                        --it; // 移动到上一个元素
+
+                        --it;
                     }
                     pos = std::distance(indices.begin(), it);
                 }
 
 
-                // 2. 开始组装每个窗口的结果
-                //double sum = 0.0;
-                //cout<<pos<<endl;
                 sum += Window_CMs[0][pos].query(dic[k]);
                 for (int i = 1; i < sub_num; i++) {
                     sum += Window_CMs[i][0].query(dic[k]);
@@ -469,7 +426,6 @@ vector<double> Private_Heavy::Query() {
 
             }
         }else{
-            // 需要查找真实的窗口的大小，
             int tmp1 =(w-last_win);
             int n = 0 ;
             while (tmp1>sub_size){
@@ -481,21 +437,14 @@ vector<double> Private_Heavy::Query() {
             int pos = 0;
 
             if (it == indices.begin()) {
-                // tmp 小于所有元素，没有上一个位置
-                // 根据具体需求处理这种情况
-                pos = -1; // 或者任何表示 "没有有效位置" 的值
+                pos = -1;
             } else {
                 if (it == indices.end() || *it != tmp) {
-                    // 如果 tmp 大于所有元素，或者没有在数组中找到完全匹配的元素
-                    // it 指向的是第一个大于 tmp 的元素或者是 end()
-                    --it; // 移动到上一个元素
+                    --it;
                 }
                 pos = std::distance(indices.begin(), it);
             }
 
-            // 2. 开始组装每个窗口的结果
-            //double sum = 0.0;
-            //cout<<"windows_CMs size:"<<Window_CMs.size()<<endl;
             sum += Window_CMs[0][pos].query(dic[k]);
             for (int i = 1; i < sub_num; i++) {
                 sum += Window_CMs[i][0].query(dic[k]);

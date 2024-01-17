@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <chrono>
 
 using namespace  std;
 #ifndef DP_SLIDING_WINDOW_PRIVATEHEAVYHITTERMG_H
@@ -18,16 +19,18 @@ using namespace  std;
 
 class PrivateMisraGries {
 public:
-    PrivateMisraGries(double epsilon, double lambda, int T);
+    PrivateMisraGries(double epsilon, double lambda);
     void processStream(const std::vector<string>& stream);
     std::unordered_map<string, double> getResult();
+    int generateSymmetricGeometricRandomNumber(double alpha);
 
 private:
     double epsilon;
     double lambda;
-    int T;
     int threshold;
     std::unordered_map<string, double> f;
+    unsigned int seed;
+    std::mt19937 gen;
 
 };
 
@@ -35,7 +38,7 @@ private:
 
 class PCC {
 public:
-    PCC(double epsilon, double lambda, int W,const std::vector<std::string>& initialData);
+    PCC(double epsilon, double lambda,double true_value, int W,const std::vector<std::string>& initialData);
     void processItem(string stream);
     std::unordered_map<std::string, double> query_all();
     double query(string& element);

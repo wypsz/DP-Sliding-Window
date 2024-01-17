@@ -20,7 +20,7 @@ public:
     vector<double> get_parameter();
 
 private:
-    // d行t列d个hash function 映射到t个bit
+
     int t;
     int d;
     double sigma;
@@ -59,7 +59,7 @@ public:
     double Query(string item);
     vector<vector<double>> show_parameter();
 private:
-     int w; //窗口大小
+     int w;
      int step;
     double rho;
     double gamma;
@@ -73,8 +73,8 @@ private:
     // vector<string> dic;
     vector<int> indices;
     vector<int> checkpoints;
-    vector<vector<CountMinSketch>> Window_CMs; // 所有的子窗口中CM汇总
-    int last_win=0;//统计最后一个子窗口内有多少item
+    vector<vector<CountMinSketch>> Window_CMs;
+    int last_win=0;
     vector<CountMinSketch> last_win_cms;
 };
 

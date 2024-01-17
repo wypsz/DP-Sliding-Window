@@ -4,54 +4,66 @@
 
 #include "PCC.h"
 #include <climits>
+#include <cassert>
 
 
-PrivateMisraGries::PrivateMisraGries(double epsilon, double lambda, int T)
-        : epsilon(epsilon), lambda(lambda), T(T), threshold(5) {}
+PrivateMisraGries::PrivateMisraGries(double epsilon, double lambda) {
+    this->epsilon = epsilon;
+    this->lambda = lambda;
+    this->threshold = ceil(2/lambda);
+}
 
 void PrivateMisraGries::processStream(const std::vector<string>& stream) {
+    gen.seed(seed);
     for(int t = 0; t < stream.size(); t++) {
         string sigma = stream[t];
         f[sigma]++;
 
-        // 查找此时f(x)>0有多少个
-        int countOverThreshold = 0;
-        for(auto& [key, value] : f) {
-            if(value > threshold) countOverThreshold++;
-        }
-
-        if(countOverThreshold > threshold) {
-            for(auto& [key, value] : f) {
-                if(value > 0) value--;
+        if(f.size() > threshold) {
+            for(auto it = f.begin(); it != f.end(); ) {
+                if(it->second > 0) it->second--;
+                if(it->second == 0) {
+                    it = f.erase(it);  // 删除计数为0的元素
+                } else {
+                    ++it;
+                }
             }
         }
     }
 
-//    int sensitivity = threshold + 1;
-//    std::geometric_distribution<int> distribution(std::exp(-epsilon / (sensitivity + 1)));
-//    std::default_random_engine generator;
-//
-//    for(auto& [key, value] : f) {
-//        int r = distribution(generator);
-//        f[key] = std::max(f[key] + r, 0.0);
-//    }
+    int sensitivity = threshold + 1;
 
-    int nonZeroCount = 0;
-    string smallestNonZeroItem;
-    int smallestNonZeroValue = INT_MAX;
+
 
     for(auto& [key, value] : f) {
-        if(value > 0) {
-            nonZeroCount++;
-            if(value < smallestNonZeroValue) {
-                smallestNonZeroValue = value;
-                smallestNonZeroItem = key;
-            }
+        int r = generateSymmetricGeometricRandomNumber(exp(epsilon / (sensitivity + 1)));
+        if (r!=0){
+            cout<<r<<endl;
         }
+        f[key] = std::max(f[key] + r, 0.0);
+        seed++;
+        //cout<<f[key]<<endl;
     }
 
-    if(nonZeroCount > threshold) {
-        f[smallestNonZeroItem] = 0;
+    if(f.size() > threshold) {
+        std::vector<std::pair<string, int>> counts;
+
+        for (const auto& kv : f) {
+            counts.push_back(kv);
+        }
+
+        std::sort(counts.begin(), counts.end(), [](const auto& a, const auto& b) {
+            return a.second < b.second;
+        });
+
+        while(f.size() > threshold) {
+            int minValue = counts.front().second;
+            auto it = counts.begin();
+            while (it != counts.end() && it->second == minValue) {
+                f.erase(it->first);
+                it = counts.erase(it);
+            }
+        }
     }
 }
 
@@ -59,92 +71,81 @@ std::unordered_map<string, double> PrivateMisraGries::getResult() {
     return f;
 }
 
+// int PrivateMisraGries::generateSymmetricGeometricRandomNumber(double alpha){
+//     static random_device rd;
+//     static mt19937 gen(rd());
+
+//     geometric_distribution<> d((alpha-1) / alpha);
+
+//     uniform_int_distribution<> dis(0,1);
+//     int geom_random = d(gen);
+
+//     int sign = dis (gen)*2 -1;
+//     return geom_random * sign;
+// }
 
 
-
-
-PCC::PCC(double epsilon, double lambda, int W,const std::vector<std::string>& initialData) : epsilon(epsilon), lambda(lambda), W(W),currentTime(0) {
-    this->W0 = ceil(lambda * W / 4);
-    this->l = log2(4 / lambda);
-    initBlocks(initialData);
-//    for (int i=0;i<initialData.size();i++){
-//        processItem(initialData[i]);
-//    }
+int PrivateMisraGries::generateSymmetricGeometricRandomNumber(double alpha) {
+    std::geometric_distribution<> d((alpha - 1) / alpha);
+    std::uniform_int_distribution<> dis(0, 1);
+    int geom_random = d(gen);
+    int sign = dis(gen) * 2 - 1;
+    return geom_random * sign;
 }
 
+PCC::PCC(double epsilon, double lambda,double true_value, int W,const std::vector<std::string>& initialData) : epsilon(epsilon), lambda(lambda), W(W),currentTime(0) {
+    this->W0 = ceil(lambda * W / 4);
+    cout<<lambda<<" "<<W<<" "<<W0<<endl;
+    this->l = log(4 / lambda);
+    initBlocks(initialData);
 
-//void PCC::processItem(string stream) {
-//    currentTime++;
-//    for (int i = 0; i <l; i++) {
-//        for (auto &block: blocks[i]) {
-//            if (block.startTime > currentTime) {
-//                block.state = FUTURE;
-//            } else if (block.startTime <= currentTime && block.endTime > currentTime) {
-//                block.state = UNDER_CONSTRUCTION;
-//                if (!block.pmg) { // Only initiate once
-//                    block.pmg = make_unique<PrivateMisraGries>(epsilon, lambda, block.endTime - block.startTime + 1);
-//                }
-//                block.buffer.push_back(stream);
-//            }else if (currentTime - W + 1 <= block.startTime && block.endTime <= currentTime && block.state!= ACTIVE) {
-//                block.state = ACTIVE;
-//                if (!block.pmg){
-//                    block.pmg = make_unique<PrivateMisraGries>(epsilon, lambda, block.endTime - block.startTime + 1);
-//                    block.pmg->processStream({stream});
-//                }
-//                if (block.buffer.size() > 0) {
-//                    block.pmg->processStream(block.buffer);
-//                    block.buffer.clear(); // Empty the buffer
-//                }
-//                // Now, you can retrieve results if you want
-//                // auto result = block.pmg->getResult();
-//            }else if (block.startTime < currentTime - W + 1) {
-//                    block.state = EXPIRED;
-//                }
-//            }
-//        }
-//    }
+}
+
 
 void PCC::processItem(string stream) {
     currentTime++;
 
     Block* underConstructionLeaf = nullptr;
-    for (auto &block : blocks[0]) {  // 只检查叶子节点
-        if (block.state == UNDER_CONSTRUCTION) {
-            underConstructionLeaf = &block;
-            break;
-        }
+    if (!blocks[0].empty() && blocks[0].back().state == UNDER_CONSTRUCTION) {
+        assert(blocks[0].back().pmg!= nullptr);
+        underConstructionLeaf = &blocks[0].back();
     }
 
-    if (!underConstructionLeaf) {  // 如果没有UNDER_CONSTRUCTION的叶子节点
-        // 直接为叶子节点创建一个新的block
+    if (!underConstructionLeaf) {
         Block newLeaf;
         newLeaf.state = UNDER_CONSTRUCTION;
         newLeaf.startTime = currentTime;
-        newLeaf.endTime = currentTime;
+        newLeaf.endTime = currentTime+W0-1;
         newLeaf.buffer.push_back(stream);
 
-        if (newLeaf.endTime - newLeaf.startTime + 1 == 1) {  // 如果叶子节点只需要一个元素
+        if (newLeaf.endTime - newLeaf.startTime + 1 == 1) {
             newLeaf.state = ACTIVE;
-            newLeaf.pmg = make_unique<PrivateMisraGries>(epsilon, lambda, 1);
+            newLeaf.pmg = make_unique<PrivateMisraGries>(epsilon, lambda);
             newLeaf.pmg->processStream(newLeaf.buffer);
             newLeaf.buffer.clear();
         } else {
             if (!newLeaf.pmg) {
-                newLeaf.pmg = make_unique<PrivateMisraGries>(epsilon, lambda, newLeaf.endTime - newLeaf.startTime + 1);
+                double epsilon_i = epsilon / pow(2,(l-0+1));
+                double lambda_i = 1.0 / (pow(2,0) * (l+1));
+
+                newLeaf.pmg = make_unique<PrivateMisraGries>(epsilon_i, lambda_i);
             }
         }
 
         blocks[0].push_back(move(newLeaf));
 
-        // 对于更高的层次，根据最后一个block的状态进行操作
         for (int i = 1; i < l; i++) {
+
+            double epsilon_i = epsilon / pow(2,(l-i+1));
+            double lambda_i = 1.0 / (pow(2,i) * (l+1));
+
             Block& lastBlock = blocks[i].back();
             if (lastBlock.state == UNDER_CONSTRUCTION) {
                 lastBlock.buffer.push_back(stream);
                 if (lastBlock.buffer.size() == W0*pow(2, i)) {
                     lastBlock.state = ACTIVE;
                     if (!lastBlock.pmg){
-                        lastBlock.pmg = make_unique<PrivateMisraGries>(epsilon, lambda, 1);
+                        lastBlock.pmg = make_unique<PrivateMisraGries>(epsilon_i, lambda_i);
                     }
                     lastBlock.pmg->processStream(lastBlock.buffer);
                     lastBlock.buffer.clear();
@@ -156,7 +157,7 @@ void PCC::processItem(string stream) {
                 newBlock.endTime = currentTime + W0*pow(2, i) - 1;
                 newBlock.buffer.push_back(stream);
                 if (!newBlock.pmg) {
-                    newBlock.pmg = make_unique<PrivateMisraGries>(epsilon, lambda, newBlock.endTime - newBlock.startTime + 1);
+                    newBlock.pmg = make_unique<PrivateMisraGries>(epsilon_i, lambda_i);
                 }
                 blocks[i].push_back(move(newBlock));
             }
@@ -169,13 +170,17 @@ void PCC::processItem(string stream) {
             underConstructionLeaf->buffer.clear();
         }
         for (int i = 1; i < l; i++) {
+
+            double epsilon_i = epsilon / pow(2,(l-i+1));
+            double lambda_i = 1.0 / (pow(2,i) * (l+1));
+
             Block& lastBlock = blocks[i].back();
             if (lastBlock.state == UNDER_CONSTRUCTION) {
                 lastBlock.buffer.push_back(stream);
                 if (lastBlock.buffer.size() == W0*pow(2, i)) {
                     lastBlock.state = ACTIVE;
                     if (!lastBlock.pmg){
-                        lastBlock.pmg = make_unique<PrivateMisraGries>(epsilon, lambda, 1);
+                        lastBlock.pmg = make_unique<PrivateMisraGries>(epsilon_i, lambda_i);
 
                     }
                     lastBlock.pmg->processStream(lastBlock.buffer);
@@ -188,7 +193,7 @@ void PCC::processItem(string stream) {
                 newBlock.endTime = currentTime + W0*pow(2, i) - 1;
                 newBlock.buffer.push_back(stream);
                 if (!newBlock.pmg) {
-                    newBlock.pmg = make_unique<PrivateMisraGries>(epsilon, lambda, newBlock.endTime - newBlock.startTime + 1);
+                    newBlock.pmg = make_unique<PrivateMisraGries>(epsilon_i, lambda_i);
                 }
                 blocks[i].push_back(move(newBlock));
             }
@@ -196,25 +201,19 @@ void PCC::processItem(string stream) {
 
     }
 
-
-    for (int i=0;i<l;i++){
-        for (auto it = blocks[i].begin(); it != blocks[i].end();) {
-            if (it->startTime <= currentTime - W) {  // 当前时间超过窗口W的结束时间，表示block已经过期
-                it = blocks[i].erase(it);
-            } else {
-                ++it;
-            }
-        }
+    if (currentTime % W0 == 0){
+        deleteExpiredBlocks();
     }
-
-    deleteExpiredBlocks();
 }
 
 
 
 std::unordered_map<string, double> PCC::query_all() {
     std::vector<std::pair<int, int>> uncoveredTimeRanges;
-    uncoveredTimeRanges.push_back({currentTime - W + 1, currentTime});
+
+    int mod = currentTime % W0;
+    cout<<"current:"<<currentTime-mod<<endl;
+    uncoveredTimeRanges.push_back({currentTime -mod - W + 1, currentTime - mod});
 
     // 结果map
     std::unordered_map<string, double> resultMap;
@@ -224,35 +223,33 @@ std::unordered_map<string, double> PCC::query_all() {
         std::vector<std::pair<int, int>> newUncoveredTimeRanges;
 
         for (Block& block : currentLayer) {
-            for (auto it = uncoveredTimeRanges.begin(); it != uncoveredTimeRanges.end(); ) {
-                int windowStartTime = it->first;
-                int windowEndTime = it->second;
+            std::vector<std::pair<int, int>> tempUncovered;  //int windowEndTime = it->second;
 
-                if (block.endTime >= windowStartTime && block.startTime <= windowEndTime && block.state == ACTIVE) {
+            for (auto& range : uncoveredTimeRanges ){
+                if (block.endTime<=range.second && block.startTime >= range.first && block.state == ACTIVE){
                     auto blockResult = block.pmg->getResult();
+                    cout<<"size:"<<blockResult.size()<<endl;
+                    //cout<<"result size1:"<<resultMap.size()<<endl;
                     for (const auto& pair : blockResult) {
                         resultMap[pair.first] += pair.second;
                     }
 
-                    if (block.startTime > windowStartTime) {
-                        newUncoveredTimeRanges.push_back({windowStartTime, block.startTime - 1});
+                    if (block.startTime > range.first){
+                        tempUncovered.push_back({range.first,block.startTime-1});
                     }
-                    if (block.endTime < windowEndTime) {
-                        newUncoveredTimeRanges.push_back({block.endTime + 1, windowEndTime});
+                    if (block.endTime < range.second){
+                        tempUncovered.push_back({block.endTime+1,range.second});
                     }
-
-                    // 使用返回的迭代器来避免迭代器失效的问题
-                    it = uncoveredTimeRanges.erase(it);
-                } else {
-                    ++it;
+                } else{
+                    tempUncovered.push_back(range);
                 }
             }
+            uncoveredTimeRanges = tempUncovered;
+
         }
 
-        //
-        uncoveredTimeRanges.insert(uncoveredTimeRanges.end(), newUncoveredTimeRanges.begin(), newUncoveredTimeRanges.end());
     }
-
+    cout<<"all resultMap size:"<<resultMap.size()<<endl;
     return resultMap;
 }
 
@@ -287,16 +284,10 @@ void PCC::deleteExpiredBlocks() {
 void PCC::initBlocks(const std::vector<std::string>& initialData) {
     int currentLevelBlockSize = W0;
 
-    // 计算有多少叶子节点
-//    int leaf_num = W/W0;
-//    // 排满子树应该有多少叶子节点
-//    int new_num = pow(2, ceil(log2(leaf_num)));
-//    // 此时新的W值为
-//    int new_w = new_num * W0;
-    // 1. 按照初始化好第一个窗口中block的情况构建好跟窗口相关的所有block
     for (int i = 0; i < l; i++) {
         // Calculate the number of blocks for this level
         int numOfBlocks = ceil(W*1.0 / currentLevelBlockSize);
+        cout<<i<<" level "<<numOfBlocks<<endl;
 
         // Create a vector for the current level
         vector<Block> currentLevel;
@@ -310,22 +301,25 @@ void PCC::initBlocks(const std::vector<std::string>& initialData) {
             currentLevel.push_back(move(block));
         }
 
-        // Add the current level to the blocks
+
         blocks.push_back(move(currentLevel));
 
         // Double the block size for the next level
         currentLevelBlockSize *= 2;
     }
 
-    // 2. 遍历blocks，根据提前算好的每个block的startTime和endTime，获取initialData中对应的元素，用PMG处理这部分元素，并更改状态
-    for(auto &level : blocks) {
-        for(auto &block : level) {
+    for (int i=0 ; i<l; i++){
+
+        double epsilon_i = epsilon / pow(2,(l-i+1));
+        double lambda_i = 1.0 / (pow(2,i) * (l+1));
+
+        for(auto &block : blocks[i]) {
             if(block.endTime <= initialData.size()) {
                 // This block is entirely within the initialData
                 block.buffer.insert(block.buffer.end(),
                                     initialData.begin() + block.startTime - 1,
                                     initialData.begin() + block.endTime);
-                block.pmg = make_unique<PrivateMisraGries>(epsilon, lambda, block.endTime - block.startTime + 1);
+                block.pmg = make_unique<PrivateMisraGries>(epsilon_i,lambda_i);
                 block.pmg->processStream(block.buffer);
                 block.state = ACTIVE;
                 block.buffer.clear();  // Clear the buffer after processing
@@ -334,10 +328,8 @@ void PCC::initBlocks(const std::vector<std::string>& initialData) {
                 block.buffer.insert(block.buffer.end(),
                                     initialData.begin() + block.startTime - 1,
                                     initialData.end());
-                if (block.endTime<=initialData.size()){
-                    block.pmg = make_unique<PrivateMisraGries>(epsilon, lambda, block.buffer.size());
-                    block.pmg->processStream(block.buffer);
-                }
+                block.pmg = make_unique<PrivateMisraGries>(epsilon_i, lambda_i);
+                block.pmg->processStream(block.buffer);
                 block.state = UNDER_CONSTRUCTION;
             }
         }

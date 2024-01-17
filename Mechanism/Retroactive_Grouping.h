@@ -30,14 +30,14 @@ private:
     vector<string> dic;
     int be;
     vector<int> index;
-    vector<double> noise_histogram;// 当前时刻的histogram情况
+    vector<double> noise_histogram;
     vector<int> histogram;
-    vector<vector<int>> H;  // 存储所有时刻的counter情况
+    vector<vector<int>> H;
     vector<vector<double>> H_noise;
     vector<double> difference;
     vector<vector<double>> G;
-    vector<double> Lamb; // 记录每个item上一次发布时加的噪声尺度Lap(lambda)
-    int w;  // 窗口大小
+    vector<double> Lamb;
+    int w;
     int m;
     double epsilon1;
     double epsilon2;

@@ -16,7 +16,7 @@ public:
     double Query(string item);
 
 private:
-    int w; //窗口大小
+    int w;
     int step;
     double rho;
     double gamma;
@@ -31,9 +31,9 @@ private:
     // vector<string> dic;
     vector<int> indices;
     vector<int> checkpoints;
-    vector<vector<CountMinSketch>> Window_CMs; // 所有的子窗口中CM汇总
-    vector<CountMinSketch> building_CM;// 每个子窗口中构建好的最长的CMs
-    int last_win=0;//统计最后一个子窗口内有多少item
+    vector<vector<CountMinSketch>> Window_CMs;
+    vector<CountMinSketch> building_CM;
+    int last_win=0;
     vector<CountMinSketch> last_win_cms;
     int last_finish_index;
     int flag;
