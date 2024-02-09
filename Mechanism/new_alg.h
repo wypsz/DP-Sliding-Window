@@ -9,27 +9,31 @@
 #include <string>
 #include <functional>
 #include "md5.h"
+#include <random>
 using namespace std;
 
 class CountMinSketch {
 public:
-    CountMinSketch(double gamma, double beta, double rho = 0.0);
+    CountMinSketch(double gamma, double beta, double rho = 0.0,unsigned int seed=0,unsigned int hseed=0);
     void update(const std::string& x, double value = 1.0);
     double query(const std::string x);
     // vector<int> query_vector(vector<string> dic);
     vector<double> get_parameter();
 
 private:
-
+    // d行t列d个hash function 映射到t个bit
     int t;
     int d;
     double sigma;
     double E;
     double budget;
+    unsigned int hseed;
+    
     vector<vector<double>> C;
     void generateNoises(std::vector<double>& noises) const;
     vector<int> h(const std::string& x) const;
     double E1;
+    std::mt19937 gen;
 };
 
 class SmoothHistogram {
@@ -39,7 +43,6 @@ public:
     vector<int> getCheckpoints();
     vector<int> getIndices();
     void Add();
-    void cut();
 private:
     double alpha;
     int s;
@@ -49,33 +52,4 @@ private:
     int w;
     int step;
 };
-
-class Private_counter{
-public:
-    Private_counter(const vector<string>& xw, int w,int step, int sub_num,double rho, double gamma, double beta,double q,double alpha, double rest_budget);
-    vector<CountMinSketch> ProcessSubWindow(const vector<string>& newItems);
-    void ProcessNew(string item);
-    // vector<pair<int, int>> windowAggregate();
-    double Query(string item);
-    vector<vector<double>> show_parameter();
-private:
-     int w;
-     int step;
-    double rho;
-    double gamma;
-    double beta;
-    double q;
-    double alpha;
-    int sub_size;
-    int sub_num;
-    double rest_budget;
-    double all_budget;
-    // vector<string> dic;
-    vector<int> indices;
-    vector<int> checkpoints;
-    vector<vector<CountMinSketch>> Window_CMs;
-    int last_win=0;
-    vector<CountMinSketch> last_win_cms;
-};
-
 #endif //DP_SLIDING_WINDOW_NEW_ALG_H

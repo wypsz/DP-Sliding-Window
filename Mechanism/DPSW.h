@@ -9,7 +9,7 @@
 
 class DPSW {
 public:
-    DPSW(const vector<string>& xw, int w,int step, int sub_num,double rho, double gamma, double beta,double q,double alpha,unsigned int seedGenerator);
+    DPSW(const vector<string>& xw, int w,int step, int sub_num,double rho, double gamma, double beta,double q,double alpha,unsigned int seedGenerator,unsigned int hseed);
     vector<CountMinSketch> ProcessSubWindow(const vector<string>& newItems);
     void ProcessNew(string item);
     vector<vector<double>> show_parameter();
@@ -27,8 +27,7 @@ private:
     int sub_size;
     int sub_num;
     double all_budget;
-    double rest_budget;
-    // vector<string> dic;
+    vector<double> privacy_budget;
     vector<int> indices;
     vector<int> checkpoints;
     vector<vector<CountMinSketch>> Window_CMs;
@@ -36,8 +35,10 @@ private:
     int last_win=0;
     vector<CountMinSketch> last_win_cms;
     int last_finish_index;
-    int flag;
+    //int flag;
     unsigned int seedGenerator;
+    unsigned int hseed;
+    //double rest_budget;
 };
 
 

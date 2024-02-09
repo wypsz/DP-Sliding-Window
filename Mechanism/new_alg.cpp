@@ -12,8 +12,9 @@
 #include <algorithm>
 using namespace std;
 
-CountMinSketch::CountMinSketch(double gamma, double beta, double rho)
-        : t(1.0 / gamma), d(ceil(log(1.0 / beta))), sigma(0.0), E(0.0) {
+CountMinSketch::CountMinSketch(double gamma, double beta, double rho,unsigned int seed,unsigned int hseed)
+        : t(1.0 / gamma), d(ceil(log(1.0 / beta))), sigma(0.0), E(0.0),gen(seed) {
+    this->hseed = hseed;
     if (rho == 0.0){
         for (int i = 0; i < d; ++i) {
             vector<double> table(t, 0.0);
@@ -60,18 +61,28 @@ void CountMinSketch::generateNoises(std::vector<double>& noises) const {
     }
 }
 
-vector<int> CountMinSketch::h(const std::string& x) const {
+
+
+std::vector<int>CountMinSketch::h(const std::string& x) const {
     std::vector<int> hash_values;
     for (int i = 0; i < d; ++i) {
-        auto val = MD5(x).toStr() + to_string(i);
-        std::hash<std::string> hasher;
-        auto hash_value = hasher(val) % t;
+        MD5 md5(x + std::to_string(i+hseed));
+        const byte* digest = md5.getDigest(); 
+
+        std::uint64_t part1 = (static_cast<std::uint64_t>(digest[0]) << 56) |
+                                (static_cast<std::uint64_t>(digest[1]) << 48) |
+                                (static_cast<std::uint64_t>(digest[2]) << 40) |
+                                (static_cast<std::uint64_t>(digest[3]) << 32);
+        std::uint64_t part2 = (static_cast<std::uint64_t>(digest[4]) << 24) |
+                                (static_cast<std::uint64_t>(digest[5]) << 16) |
+                                (static_cast<std::uint64_t>(digest[6]) << 8) |
+                                static_cast<std::uint64_t>(digest[7]);
+        std::uint64_t combined = part1 | part2;
+
+        int hash_value = combined % t;
         hash_values.push_back(hash_value);
-
     }
-
     return hash_values;
-
 }
 
 
@@ -133,29 +144,9 @@ void SmoothHistogram::Add() {
     for (int i=0;i<w;i++){
         addItem();
     }
-    cut();
-    if (checkpoints[checkpoints.size()-1] < step){
-        checkpoints.pop_back();
-        indices.pop_back();
-    }
+
 }
 
-void SmoothHistogram::cut() {
-    int size = indices.size();
-    for (int i=0;i<size-1;i++){
-        for(int j=i+1;j<size;j++){
-            while (indices[j]-indices[i]<step){
-                indices.erase(indices.begin()+j);
-                checkpoints.erase(checkpoints.begin()+j);
-                size--;
-                if (j >= size){
-                    break;
-                }
-            }
-            break;
-        }
-    }
-}
 
 vector<int> SmoothHistogram::getCheckpoints() {
     return checkpoints;
@@ -164,184 +155,3 @@ vector<int> SmoothHistogram::getCheckpoints() {
 vector<int> SmoothHistogram::getIndices() {
     return indices;
 }
-
-
-Private_counter::Private_counter(const vector<string>& xw, int w,int step, int sub_num,double rho, double gamma,
-                                 double beta,double q, double alpha, double all_budget) {
-
-    this->w = w;
-    this->step = step;
-    this->rho = rho;
-    this->gamma = gamma;
-    this->beta = beta;
-    this->q = q;
-    this->alpha = alpha;
-    this->all_budget = all_budget;
-    this->sub_num = sub_num;
-    this->sub_size = w/sub_num;
-
-    cout<<"hi"<<endl;
-    SmoothHistogram sh(alpha,sub_size,step);
-    cout<<"hi"<<endl;
-    sh.Add();
-    indices = sh.getIndices();
-    checkpoints = sh.getCheckpoints();
-    for (int i=0;i<indices.size();i++){
-        cout<<indices[i]<<"     ";
-    }
-    cout<<endl;
-    cout<<"indices finish"<<endl;
-    for (int i = 0; i < checkpoints.size(); ++i) {
-        cout<<checkpoints[i]<<"     ";
-    }
-    cout<<endl;
-    cout<<"checkpoints finish"<<endl;
-    cout<<"size:"<<indices.size()<<"=="<<checkpoints.size()<<endl;
-
-
-    vector<vector<string>> sub_windows;
-    for (int i = 0; i < sub_num; i++) {
-        vector<string> sub_win;
-        for (int j=0;j<sub_size;j++){
-            sub_win.push_back(xw[i*sub_size+j]);
-        }
-        sub_windows.push_back(sub_win);
-    }
-
-    for (int i=0;i<sub_num;i++){
-        vector<CountMinSketch> cms = ProcessSubWindow(sub_windows[i]);
-        Window_CMs.push_back(cms);
-        vector<string>().swap(sub_windows[i]);
-        cout<<i<<"th sub_window finish!"<<endl;
-
-    }
-}
-
-vector<vector<double>> Private_counter::show_parameter() {
-    vector<CountMinSketch> cms = Window_CMs[0];
-    vector<vector<double >> res;
-    for (int i=0;i<cms.size();i++){
-        vector<double> tmp = cms[i].get_parameter();
-        res.push_back(tmp);
-    }
-    return res;
-
-}
-
-vector<CountMinSketch> Private_counter::ProcessSubWindow(const vector<std::string> &newItems) {
-
-    vector<CountMinSketch> cms;
-    int index=0;
-    for (int i=0;i<newItems.size();i++){
-        if (i == 0){
-            CountMinSketch cm (gamma,beta,rho);
-            rest_budget = all_budget - rho;
-            cm.update(newItems[i],1);
-            cms.push_back(cm);
-            index++;
-        }else{
-            for (int j=0;j<index;j++){
-                cms[j].update(newItems[i]);
-            }
-            if (i+1 == indices[index]){
-                double budget;
-                if (index == indices.size()-1){
-                    budget = rest_budget;
-                }else{
-                    budget = rho*pow(q,index);
-                    rest_budget -= budget;
-                }
-                CountMinSketch cm(gamma,beta,budget);
-                cm.update(newItems[i]);
-                cms.push_back(cm);
-                index++;
-            }
-
-
-        }
-    }
-     // cout<<cms.size()<<endl;
-    return cms;
-}
-
-
-void Private_counter::ProcessNew(std::string item) {
-    if (last_win == 0){
-        CountMinSketch cm(gamma,beta,rho);
-        rest_budget = all_budget - rho;
-        cm.update(item);
-        last_win ++;
-        last_win_cms.push_back(cm);
-    }else{
-        for (int i=0;i<last_win_cms.size();i++){
-            last_win_cms[i].update(item);
-        }
-        vector<int>::iterator it = find(indices.begin(),indices.end(),last_win+1);
-        if ( it != indices.end()){
-            int ind = distance(indices.begin(),it);
-            double budget;
-            if (ind == indices.size()-1){
-                budget = rest_budget;
-            }else{
-                budget = rho * pow(q,ind);
-                rest_budget -= budget;
-            }
-
-            CountMinSketch cm(gamma,beta,budget);
-            cm.update(item);
-            last_win_cms.push_back(cm);
-        }
-        last_win++;
-    }
-
-    if (last_win == sub_size){
-        // 1. 将这个子窗口的所有cm更新到全局中
-        Window_CMs.push_back(last_win_cms);
-        cout<<"Window_CMs"<<Window_CMs.size()<<endl;
-        // 删除
-        last_win = 0;
-        last_win_cms.clear();
-        Window_CMs.erase(Window_CMs.begin());
-    }
-}
-
-
-double Private_counter::Query(string item) {
-    double sum=0.0;
-    if (last_win == 0 || indices.size()==1){
-        // 直接把第一个checkpoints都加起来
-        for (int i=0;i<sub_num;i++){
-            sum += Window_CMs[i][0].query(item);
-        }
-        return sum;
-    }
-    int tmp = last_win+1;
-
-    auto it = std::lower_bound(indices.begin(), indices.end(), tmp);
-    int pos = 0;
-
-    if (*it == tmp) {
-        //std::cout << "Found x in arr\n";
-        pos = distance(indices.begin(),it);
-    } else {
-        int idx = it - indices.begin();
-        int diff1 = tmp - indices[idx - 1];
-        int diff2 = indices[idx] - tmp;
-        if (diff1 < diff2) {
-            // std::cout << "The element closest to x is " << checkpoints[idx - 1] << std::endl;
-            pos = idx-1;
-        } else {
-            // std::cout << "The element closest to x is " << checkpoints[idx] << std::endl;
-            pos = idx;
-        }
-    }
-
-
-    //double sum = 0.0;
-    sum += Window_CMs[0][pos].query(item);
-    for (int i=1;i<sub_num;i++){
-        sum += Window_CMs[i][0].query(item);
-    }
-    return sum;
-}
-

@@ -8,7 +8,7 @@
 
 MG::MG(double alpha) {
     this->alpha = alpha;
-    this->threshold = ceil((2/ alpha));
+    this->threshold = ceil((1/ alpha));
 }
 
 void MG::processStream(const std::vector<string> &stream) {
@@ -16,12 +16,11 @@ void MG::processStream(const std::vector<string> &stream) {
         string sigma = stream[t];
         f[sigma]++;
 
-        // 查找此时f(x)>0有多少个
         if(f.size() > threshold) {
             for(auto it = f.begin(); it != f.end(); ) {
                 if(it->second > 0) it->second--;
                 if(it->second == 0) {
-                    it = f.erase(it);  // 删除计数为0的元素
+                    it = f.erase(it);
                 } else {
                     ++it;
                 }
@@ -46,16 +45,13 @@ unordered_map<string,int> PCC_counter::convertToFrequencyMap(vector<std::string>
 void PCC_counter::initBlocks(const std::vector<std::string>& initialData) {
     int currentLevelBlockSize = S1;
 
-    for (int i = 0; i < L; i++) {
-        // Calculate the number of blocks for this level
+    for (int i = 0; i <= L; i++) {
         int numOfBlocks = ceil(W*1.0 / currentLevelBlockSize);
         cout<<i<<" level "<<"numOfBlocks:"<<numOfBlocks<<"block size:"<<currentLevelBlockSize<<endl;
 
 
-        // Create a vector for the current level
         vector<Block> currentLevel;
 
-        // Initialize blocks for this level
         for (int j = 0; j < numOfBlocks; j++) {
             Block block;
             block.startTime = j * currentLevelBlockSize + 1;
@@ -64,21 +60,16 @@ void PCC_counter::initBlocks(const std::vector<std::string>& initialData) {
             currentLevel.push_back(move(block));
         }
 
-        // Add the current level to the blocks
         blocks.push_back(move(currentLevel));
 
-        // Double the block size for the next level
         currentLevelBlockSize *= 2;
     }
 
-    for (int i=0 ; i<L; i++){
+    for (int i=0 ; i<=L; i++){
 
-        //double epsilon_i = epsilon / pow(2,(l-i+1));
-        double alpha_i = 1.0 / (pow(2,i) * (L+1));
-        //double si = pow(2,i-2) * this->alpha* static_cast<int>(sqrt(W)) /(100 * log2(W));
+        double alpha_i = alpha / pow(2,(i+1));
         for(auto &block : blocks[i]) {
             if(block.endTime <= initialData.size()) {
-                // This block is entirely within the initialData
                 block.buffer.insert(block.buffer.end(),
                                     initialData.begin() + block.startTime - 1,
                                     initialData.begin() + block.endTime);
@@ -86,9 +77,8 @@ void PCC_counter::initBlocks(const std::vector<std::string>& initialData) {
                 block.pmg->processStream(block.buffer);
                 block.state = ACTIVE;
                 block.fre_true = convertToFrequencyMap(block.buffer);
-                block.buffer.clear();  // Clear the buffer after processing
+                block.buffer.clear();
             } else if(block.startTime <= initialData.size()) {
-                // This block is partially filled with initialData
                 block.buffer.insert(block.buffer.end(),
                                     initialData.begin() + block.startTime - 1,
                                     initialData.end());
@@ -113,15 +103,13 @@ void PCC_counter::processItem(string stream) {
     }
 
     if (!underConstructionLeaf) {
-        // 如果没有UNDER_CONSTRUCTION的叶子节点
-        // 直接为叶子节点创建一个新的block
         Block newLeaf;
         newLeaf.state = UNDER_CONSTRUCTION;
         newLeaf.startTime = currentTime;
         newLeaf.endTime = currentTime+S1-1;
         newLeaf.buffer.push_back(stream);
 
-        if (newLeaf.endTime - newLeaf.startTime + 1 == 1) {  // 如果叶子节点只需要一个元素
+        if (newLeaf.endTime - newLeaf.startTime + 1 == 1) {
             cout<<"1 item"<<endl;
             newLeaf.state = ACTIVE;
             newLeaf.pmg = make_unique<MG>(alpha);
@@ -130,21 +118,18 @@ void PCC_counter::processItem(string stream) {
             newLeaf.buffer.clear();
         } else {
             if (!newLeaf.pmg) {
-//                double epsilon_i = epsilon / pow(2,(l-0+1));
-                double alpha_i = 1.0 / (pow(2,0) * (L+1));
-                //double si = pow(2,1-2) * this->alpha* static_cast<int>(sqrt(W)) /(100 * log2(W));
+                double alpha_i = alpha / pow(2,1);
+
                 newLeaf.pmg = make_unique<MG>(alpha_i);
             }
         }
 
         blocks[0].push_back(move(newLeaf));
 
+        for (int i = 1; i <= L; i++) {
 
-        for (int i = 1; i < L; i++) {
+            double alpha_i = alpha / pow(2,(i+1));
 
-//            double epsilon_i = epsilon / pow(2,(l-i+1));
-            double alpha_i = 1.0 / (pow(2,i) * (L+1));
-            //double si = pow(2,i-2) * this->alpha* static_cast<int>(sqrt(W)) /(100 * log2(W));
             Block& lastBlock = blocks[i].back();
             if (lastBlock.state == UNDER_CONSTRUCTION) {
                 lastBlock.buffer.push_back(stream);
@@ -183,9 +168,9 @@ void PCC_counter::processItem(string stream) {
             underConstructionLeaf->buffer.clear();
 
         }
-        for (int i = 1; i < L; i++) {
+        for (int i = 1; i <= L; i++) {
 
-            double alpha_i = 1.0 / (pow(2,i) * (L+1));
+            double alpha_i = alpha / pow(2,(i+1));
 
 
             Block& lastBlock = blocks[i].back();
@@ -239,56 +224,37 @@ std::unordered_map<string, double> PCC_counter::query_all() {
         for (Block & block : currentLayer) {
             std::vector<std::pair<int, int>> tempUncovered;  //int windowEndTime = it->second;
 
-                for (auto& range : uncoveredTimeRanges ){
-                    if (block.endTime<=range.second && block.startTime >= range.first && block.state == ACTIVE){
-                        auto blockResult = block.pmg->getResult();
+            for (auto& range : uncoveredTimeRanges ){
+                if (block.endTime<=range.second && block.startTime >= range.first && block.state == ACTIVE){
+                    auto blockResult = block.pmg->getResult();
+                    double alpha_i = block.pmg->alpha;
+                    double epsilon_i = (2/alpha_i) / (epsilon/((L+1)*1.0));
+                    cout<<"alpha_i:"<<alpha_i<<"epsilon_i:"<<epsilon_i<<endl;
+                    int x = 0;
 
-                        double alpha_i = block.pmg->alpha;
-                        double epsilon_i = (2/alpha_i) / (epsilon);
-                        //double epsilon_i = epsilon/L
-                        cout<<"alpha_i:"<<alpha_i<<"epsilon_i:"<<epsilon_i<<endl;
-                        int x = 0;
-                    
-                        for (const auto& pair : blockResult) {
-                            x++;
-                            //double noise = generateLaplacianRandom(alpha*(static_cast<int>(sqrt(W)) /(16 * log2(W) *log2(W))),1)[0];
-                            int fre = block.fre_true[pair.first];
-                            //cout<<"true fre:"<<fre<<endl;
-                            generator.seed(currentSeed);
-                            double noise = generateLaplacianRandom(generator,epsilon_i,1)[0];
-                            currentSeed++;
-                            //cout<<"noise:"<<noise<<endl;
-                            //resultMap[pair.first] = resultMap[pair.first]+fre;
-                            resultMap[pair.first] = resultMap[pair.first]+fre+noise;
-                            //cout<<"resultMap fre:"<<resultMap[pair.first]<<endl;
-                        }
-                        if (block.startTime > range.first){
-                            tempUncovered.push_back({range.first,block.startTime-1});
-                        }
-                        if (block.endTime < range.second){
-                            tempUncovered.push_back({block.endTime+1,range.second});
-                        }
-                    } else{
-                        tempUncovered.push_back(range);
+                    for (const auto& pair : blockResult) {
+                        x++;
+                        int fre = block.fre_true[pair.first];
+                        generator.seed(currentSeed);
+                        double noise = generateLaplacianRandom(generator,epsilon_i,1)[0];
+                        currentSeed++;
+                        resultMap[pair.first] = resultMap[pair.first]+fre+noise;
                     }
+                    if (block.startTime > range.first){
+                        tempUncovered.push_back({range.first,block.startTime-1});
                     }
-                uncoveredTimeRanges = tempUncovered;
-
+                    if (block.endTime < range.second){
+                        tempUncovered.push_back({block.endTime+1,range.second});
+                    }
+                } else{
+                    tempUncovered.push_back(range);
                 }
-        }
+            }
+            uncoveredTimeRanges = tempUncovered;
 
-        //
-    cout<<"original size:"<<resultMap.size()<<endl;
-    cout<<"true_the:"<<true_the<<endl;
-    //double the = alpha * W;
-    auto temp = resultMap["209"];
-    for (auto it = resultMap.begin(); it != resultMap.end();) {
-        if (it->second < true_the) {
-            it = resultMap.erase(it);
-        } else {
-            ++it;
         }
     }
+    cout<<"original size:"<<resultMap.size()<<endl;
 
 
     cout<<"all resultMap size:"<<resultMap.size()<<endl;
@@ -315,7 +281,7 @@ vector<double> PCC_counter::generateLaplacianRandom(std::default_random_engine& 
 }
 
 void PCC_counter::deleteExpiredBlocks() {
-    for (int i=0;i<L;i++){
+    for (int i=0;i<=L;i++){
         for (auto it = blocks[i].begin(); it != blocks[i].end();) {
             if (it->endTime < currentTime - W+1) {
                 it = blocks[i].erase(it);
@@ -326,16 +292,14 @@ void PCC_counter::deleteExpiredBlocks() {
     }
 }
 
-PCC_counter::PCC_counter(double epsilon, double alpha, int W,double true_the, const vector<std::string> &initialData) {
+PCC_counter::PCC_counter(double epsilon,int level, double alpha, int W, const vector<std::string> &initialData) {
     this->alpha = alpha;
     this->W =W;
     this->currentTime = 0;
     this->epsilon = epsilon;
-    this->true_the = true_the*W;
     this->initialSeed = 0;
     this->currentSeed = initialSeed;
-    this->L=log2(4/ alpha);
-    this->S1 = ceil(alpha * W / 4);
-
+    this->L = level;
+    this->S1 = ceil(W / (pow(2,(level+1))));
     initBlocks(initialData);
 }

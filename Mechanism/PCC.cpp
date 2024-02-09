@@ -8,6 +8,7 @@
 
 
 PrivateMisraGries::PrivateMisraGries(double epsilon, double lambda) {
+
     this->epsilon = epsilon;
     this->lambda = lambda;
     this->threshold = ceil(2/lambda);
@@ -23,7 +24,7 @@ void PrivateMisraGries::processStream(const std::vector<string>& stream) {
             for(auto it = f.begin(); it != f.end(); ) {
                 if(it->second > 0) it->second--;
                 if(it->second == 0) {
-                    it = f.erase(it);  // 删除计数为0的元素
+                    it = f.erase(it);
                 } else {
                     ++it;
                 }
@@ -38,7 +39,6 @@ void PrivateMisraGries::processStream(const std::vector<string>& stream) {
     for(auto& [key, value] : f) {
         int r = generateSymmetricGeometricRandomNumber(exp(epsilon / (sensitivity + 1)));
         if (r!=0){
-            cout<<r<<endl;
         }
         f[key] = std::max(f[key] + r, 0.0);
         seed++;
@@ -71,18 +71,6 @@ std::unordered_map<string, double> PrivateMisraGries::getResult() {
     return f;
 }
 
-// int PrivateMisraGries::generateSymmetricGeometricRandomNumber(double alpha){
-//     static random_device rd;
-//     static mt19937 gen(rd());
-
-//     geometric_distribution<> d((alpha-1) / alpha);
-
-//     uniform_int_distribution<> dis(0,1);
-//     int geom_random = d(gen);
-
-//     int sign = dis (gen)*2 -1;
-//     return geom_random * sign;
-// }
 
 
 int PrivateMisraGries::generateSymmetricGeometricRandomNumber(double alpha) {
@@ -96,10 +84,11 @@ int PrivateMisraGries::generateSymmetricGeometricRandomNumber(double alpha) {
 PCC::PCC(double epsilon, double lambda,double true_value, int W,const std::vector<std::string>& initialData) : epsilon(epsilon), lambda(lambda), W(W),currentTime(0) {
     this->W0 = ceil(lambda * W / 4);
     cout<<lambda<<" "<<W<<" "<<W0<<endl;
-    this->l = log(4 / lambda);
+    this->l = log2(4 / lambda);
     initBlocks(initialData);
 
 }
+
 
 
 void PCC::processItem(string stream) {
@@ -134,7 +123,7 @@ void PCC::processItem(string stream) {
 
         blocks[0].push_back(move(newLeaf));
 
-        for (int i = 1; i < l; i++) {
+        for (int i = 1; i <= l; i++) {
 
             double epsilon_i = epsilon / pow(2,(l-i+1));
             double lambda_i = 1.0 / (pow(2,i) * (l+1));
@@ -169,7 +158,7 @@ void PCC::processItem(string stream) {
             underConstructionLeaf->pmg->processStream(underConstructionLeaf->buffer);
             underConstructionLeaf->buffer.clear();
         }
-        for (int i = 1; i < l; i++) {
+        for (int i = 1; i <= l; i++) {
 
             double epsilon_i = epsilon / pow(2,(l-i+1));
             double lambda_i = 1.0 / (pow(2,i) * (l+1));
@@ -215,7 +204,6 @@ std::unordered_map<string, double> PCC::query_all() {
     cout<<"current:"<<currentTime-mod<<endl;
     uncoveredTimeRanges.push_back({currentTime -mod - W + 1, currentTime - mod});
 
-    // 结果map
     std::unordered_map<string, double> resultMap;
 
     for (int i = blocks.size() - 1; i >= 0 && !uncoveredTimeRanges.empty(); --i) {
@@ -228,8 +216,6 @@ std::unordered_map<string, double> PCC::query_all() {
             for (auto& range : uncoveredTimeRanges ){
                 if (block.endTime<=range.second && block.startTime >= range.first && block.state == ACTIVE){
                     auto blockResult = block.pmg->getResult();
-                    cout<<"size:"<<blockResult.size()<<endl;
-                    //cout<<"result size1:"<<resultMap.size()<<endl;
                     for (const auto& pair : blockResult) {
                         resultMap[pair.first] += pair.second;
                     }
@@ -284,15 +270,13 @@ void PCC::deleteExpiredBlocks() {
 void PCC::initBlocks(const std::vector<std::string>& initialData) {
     int currentLevelBlockSize = W0;
 
-    for (int i = 0; i < l; i++) {
+    for (int i = 0; i <= l; i++) {
         // Calculate the number of blocks for this level
         int numOfBlocks = ceil(W*1.0 / currentLevelBlockSize);
         cout<<i<<" level "<<numOfBlocks<<endl;
 
-        // Create a vector for the current level
         vector<Block> currentLevel;
 
-        // Initialize blocks for this level
         for (int j = 0; j < numOfBlocks; j++) {
             Block block;
             block.startTime = j * currentLevelBlockSize + 1;
@@ -301,14 +285,12 @@ void PCC::initBlocks(const std::vector<std::string>& initialData) {
             currentLevel.push_back(move(block));
         }
 
-
         blocks.push_back(move(currentLevel));
 
-        // Double the block size for the next level
         currentLevelBlockSize *= 2;
     }
 
-    for (int i=0 ; i<l; i++){
+    for (int i=0 ; i<=l; i++){
 
         double epsilon_i = epsilon / pow(2,(l-i+1));
         double lambda_i = 1.0 / (pow(2,i) * (l+1));

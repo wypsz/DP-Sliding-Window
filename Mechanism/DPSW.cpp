@@ -15,8 +15,7 @@ using namespace std;
 
 
 DPSW::DPSW(const vector<string>& xw, int w,int step, int sub_num,double rho, double gamma,
-                                 double beta,double q, double alpha,unsigned int seedGenerator){
-
+           double beta,double q, double alpha,unsigned int seedGenerator,unsigned int hseed){
 
 
     this->w = w;
@@ -27,13 +26,11 @@ DPSW::DPSW(const vector<string>& xw, int w,int step, int sub_num,double rho, dou
     this->q = q;// 0.8
     this->alpha = alpha;
     this->sub_num = sub_num;
-    this->rho1 = rho*q;
+    this->rho1 = this->rho*q;
     this->seedGenerator=seedGenerator;
-    // 划分子窗口
-    this->sub_size = w / sub_num;//子窗口大小
-//    vector<double> checkpoints_noise;
-//    vector<double> checkpoints;
-    // 获得子窗口大小后直接调用sh获得checkpoint分割的list  s;
+    this->hseed = hseed;
+    this->sub_size = w / sub_num;
+
     cout << "hi" << endl;
     SmoothHistogram sh(this->alpha, sub_size, this->step);
     cout << "hi" << endl;
@@ -51,6 +48,18 @@ DPSW::DPSW(const vector<string>& xw, int w,int step, int sub_num,double rho, dou
     cout << endl;
     cout << "checkpoints finish" << endl;
     cout << "size:" << indices.size() << "==" << checkpoints.size() << endl;
+    privacy_budget.push_back(rho1);
+    double rest_budget=this->rho - rho1;
+    for (int i=0;i<checkpoints.size()-2;i++){
+        double budget = rest_budget/4.0;
+        privacy_budget.push_back(budget);
+        rest_budget -= budget *2.0;
+    }
+    privacy_budget.push_back(rest_budget/2.0);
+    for (int i=0;i<privacy_budget.size();i++){
+        cout<<privacy_budget[i]<<"    ";
+    }
+    cout<<"privacy budget distribution"<<endl;
 
     for (int i = 0; i < sub_num; i++) {
         vector<CountMinSketch> cms = ProcessSubWindow(
@@ -64,34 +73,26 @@ DPSW::DPSW(const vector<string>& xw, int w,int step, int sub_num,double rho, dou
 
 }
 
-/*
- * indices: 1,7753,8884
- * checkpoints: 10000,2248,1117
- */
 
 
 vector<CountMinSketch> DPSW::ProcessSubWindow(const vector<std::string> &newItems) {
-
 
     vector<CountMinSketch> cms;
     int index=0;
     cout<<"len indices:"<<indices.size()<<endl;
     for (int i=0;i<newItems.size();i++){
         if (i == 0){
-            CountMinSketch cm (gamma,beta,rho1,seedGenerator++);
+            CountMinSketch cm (gamma,beta,rho1,seedGenerator++,hseed);
             //rest_budget = all_budget - rho;
             cm.update(newItems[i],1);
             cms.push_back(cm);
             index++;
         }else{
-            // 更新已有的所有CM
             for (int j=0;j<index;j++){
                 cms[j].update(newItems[i]);
             }
             if (i+1 == indices[index]){
-                double budget=(rho1*pow((1-0.0001-q),index))/2.0;
-                // 这里是checkpoint，新开sketch
-                CountMinSketch cm(gamma,beta,budget,seedGenerator++);
+                CountMinSketch cm(gamma,beta,privacy_budget[index],seedGenerator++,hseed);
                 cm.update(newItems[i]);
                 cms.push_back(cm);
                 index++;
@@ -100,20 +101,20 @@ vector<CountMinSketch> DPSW::ProcessSubWindow(const vector<std::string> &newItem
 
         }
     }
-    // cout<<cms.size()<<endl;
+
     return cms;
 }
 
 void DPSW::ProcessNew(std::string item) {
+
     if (last_win == 0){
-        CountMinSketch cm(gamma,beta,rho1,seedGenerator++);
+        CountMinSketch cm(gamma,beta,rho1,seedGenerator++,hseed);
         cm.update(item);
         last_win ++;
         last_win_cms.push_back(cm);
-        // 新建cms为滑出做准备
+
         for (int j=indices.size()-1;j>0;j--) {
-            double budget=(rho1*pow((1-0.0001-q),j))/2.0;
-            CountMinSketch cm_ready(gamma, beta, budget,seedGenerator++);// 正向维护的从小到大，每次访问第一个
+            CountMinSketch cm_ready(gamma, beta, privacy_budget[j],seedGenerator++,hseed);// 正向维护的从小到大，每次访问第一个
             cm_ready.update(item);
             building_CM.push_back(cm_ready);
         }
@@ -127,26 +128,25 @@ void DPSW::ProcessNew(std::string item) {
         vector<int>::iterator it = find(indices.begin(),indices.end(),last_win+1);
         if ( it != indices.end()){
             int ind = distance(indices.begin(),it);
-            double budget=(rho1*pow((1-0.0001-q),ind))/2.0;
-            CountMinSketch cm(gamma,beta,budget,seedGenerator++);
+            CountMinSketch cm(gamma,beta,privacy_budget[ind],seedGenerator++,hseed);
             cm.update(item);
             last_win_cms.push_back(cm);
         }
         last_win++;
-
         for (int i=0;i<building_CM.size();i++){
             //cout<<"update_build"<<endl;
             building_CM[i].update(item);
         }
+        // 某个cm是否已经建满, building_CM有x个元素，说明现在
         if (last_finish_index == -1 && last_win == checkpoints[building_CM.size()]) {
             cout << "begin to use the first one" << endl;
             last_finish_index = 1;
         }else if (!building_CM.empty() && last_win == checkpoints[building_CM.size()-1]){
-                cout<<"delete one"<<endl;
-                building_CM.erase(building_CM.begin());
+            cout<<"delete one"<<endl;
+            building_CM.erase(building_CM.begin());// 删掉第一个
         }
 
-        }
+    }
 
     if (last_win == sub_size){
         Window_CMs.push_back(last_win_cms);
@@ -157,12 +157,10 @@ void DPSW::ProcessNew(std::string item) {
 
         last_finish_index = -1;
         if (!building_CM.empty()){
-            //cout<<"problem"<<endl;
             for (int i=0;i<building_CM.size();i++){
                 building_CM.erase(building_CM.begin());
             }
         }
-        // cout<<"last win"<<endl;
     }
 }
 
@@ -170,6 +168,7 @@ void DPSW::ProcessNew(std::string item) {
 double DPSW::Query(string item) {
     double sum=0.0;
     if (last_win == 0 || indices.size()==1){
+        // 直接把第一个checkpoints都加起来
         for (int i=0;i<sub_num;i++){
             sum += Window_CMs[i][0].query(item);
         }
@@ -182,25 +181,30 @@ double DPSW::Query(string item) {
     int pos = 0;
 
     if (it == indices.begin()) {
+
         pos = -1;
     } else {
         if (it == indices.end() || *it != tmp) {
-
             --it;
         }
         pos = std::distance(indices.begin(), it);
     }
 
 
-    //double sum = 0.0;
-    sum += Window_CMs[0][pos].query(item);
+    if (pos == -1){
+        cout<<"??????????????"<<endl;
+    }
+
+    double query1 = Window_CMs[0][pos].query(item);
+    sum += query1;
     for (int i=1;i<sub_num-1;i++){
         sum += Window_CMs[i][0].query(item);
     }
     if (last_finish_index != -1){
-        // cout<<"using last"<<endl;
-        sum += building_CM[0].query(item);
+        double query2 = building_CM[0].query(item);
+        sum += query2 ;
     }
+
     return sum;
 }
 

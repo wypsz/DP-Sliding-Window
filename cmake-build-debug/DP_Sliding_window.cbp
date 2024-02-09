@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="DP_Sliding_window"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="DP_Sliding_window">
+				<Option output="C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/DP_Sliding_window.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/x86_64-w64-mingw32"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/backward"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/../../../../include"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include-fixed"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/../../../../x86_64-w64-mingw32/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 DP_Sliding_window"/>
+					<CompileFile command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="DP_Sliding_window/fast">
+				<Option output="C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/DP_Sliding_window.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/x86_64-w64-mingw32"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/backward"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/../../../../include"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include-fixed"/>
+					<Add directory="C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/../../../../x86_64-w64-mingw32/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 DP_Sliding_window/fast"/>
+					<CompileFile command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/DPSW.cpp">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/DPSW.h">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/PCC.cpp">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/PCC.h">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/PCC_counter.cpp">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/PCC_counter.h">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/Upadhyay.cpp">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/Upadhyay.h">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/md5.cpp">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/md5.h">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/new_alg.cpp">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/Mechanism/new_alg.h">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/main.cpp">
+			<Option target="DP_Sliding_window"/>
+		</Unit>
+		<Unit filename="C:/Users/12293/Desktop/DP-Sliding-Window/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

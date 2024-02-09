@@ -32,11 +32,10 @@ private:
 
 class PCC_counter {
 public:
-    PCC_counter(double epsilon,double alpha, int W,double true_the,const std::vector<std::string>& initialData);
+    PCC_counter(double epsilon,int level,double alpha, int W,const std::vector<std::string>& initialData);
 
     void processItem(string stream);
     std::unordered_map<std::string, double> query_all();
-    //double query(string& element);
     void deleteExpiredBlocks();
     vector<double> generateLaplacianRandom(std::default_random_engine& generator, double scale, int numSamples);
     unordered_map<string,int> convertToFrequencyMap(vector<string>& vec);
@@ -57,7 +56,7 @@ private:
         unordered_map<string,int> fre_true;
     };
 
-    double true_the;
+
     double epsilon;
     double alpha;
     int W; // total time steps

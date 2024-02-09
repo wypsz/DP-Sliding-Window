@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/12293/CLionProjects/DP_Sliding_window
+# Install script for directory: C:/Users/12293/Desktop/DP-Sliding-Window
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "C:/Users/12293/CLionProjects/DP_Sliding_window/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "C:/Users/12293/Desktop/DP-Sliding-Window/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
